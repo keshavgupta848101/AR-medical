@@ -1,93 +1,111 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { TextField, Button, Paper, Typography, Container, Box, Alert } from "@mui/material"
-import { useAuth } from "../contexts/AuthContext"
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { TextField, Button, Alert } from "@mui/material";
+import { useAuth } from "../contexts/AuthContext";
 
 function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      await login(email, password)
-      navigate("/dashboard")
+      await login(email, password);
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <Paper elevation={3} className="p-8 w-full">
-          <Typography component="h1" variant="h5" className="text-center mb-4">
-            Medical AR Platform - Login
-          </Typography>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
+      {/* Background Gradient Animation */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-teal-300 to-green-400 animate-gradientBlur"></div>
 
-          {error && (
-            <Alert severity="error" className="mb-4">
-              {error}
-            </Alert>
-          )}
+      <div className="relative w-full max-w-md bg-white p-6 rounded-2xl shadow-lg backdrop-blur-lg">
+        <h1 className="text-2xl font-semibold text-center text-gray-700 mb-6">
+          Medical AR Platform - Login
+        </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <TextField
-              label="Email Address"
-              variant="outlined"
-              fullWidth
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+        {error && (
+          <Alert severity="error" className="mb-4">
+            {error}
+          </Alert>
+        )}
 
-            <TextField
-              label="Password"
-              variant="outlined"
-              fullWidth
-              required
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <TextField
+            label="Email Address"
+            variant="outlined"
+            fullWidth
+            required
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="bg-white"
+          />
 
-            <Button type="submit" fullWidth variant="contained" color="primary" disabled={loading} className="mt-4">
-              {loading ? "Logging in..." : "Login"}
-            </Button>
+          <TextField
+            label="Password"
+            variant="outlined"
+            fullWidth
+            required
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="bg-white"
+          />
 
-            <Box className="mt-3 text-center">
-              <Typography variant="body2">
-                Don't have an account?{" "}
-                <Link to="/register" className="text-blue-600 hover:underline">
-                  Register
-                </Link>
-              </Typography>
-            </Box>
-          </form>
-        </Paper>
-      </Box>
-    </Container>
-  )
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            color="primary"
+            disabled={loading}
+            className="mt-4 py-3 font-medium"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </Button>
+
+          <div className="text-center mt-3">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-blue-600 font-medium hover:underline">
+                Register
+              </Link>
+            </p>
+          </div>
+        </form>
+      </div>
+
+      {/* Tailwind Animation for Gradient */}
+      <style>
+        {`
+          @keyframes gradientBlur {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+
+          .animate-gradientBlur {
+            background-size: 200% 200%;
+            animation: gradientBlur 10s infinite ease-in-out;
+          }
+        `}
+      </style>
+    </div>
+  );
 }
 
-export default Login
-
+export default Login;

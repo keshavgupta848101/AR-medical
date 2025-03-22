@@ -12,6 +12,7 @@ import ARViewer from "./pages/ARViewer"
 import AdminDashboard from "./pages/AdminDashboard"
 import UploadImage from "./pages/UploadImage"
 import NotFound from "./pages/NotFound"
+import Home from "./pages/Home"
 
 // Create a theme instance
 const theme = createTheme({
@@ -92,7 +93,7 @@ function App() {
                 </AdminRoute>
               }
             />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={<Home />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
