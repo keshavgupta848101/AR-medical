@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Medical AR Platform for interactive learning" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Medical AR Platform</title>
+    
+    <!-- AR.js and A-Frame libraries -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <!-- Additional A-Frame components -->
+    <script>
+      // This will be loaded after A-Frame is initialized
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.AFRAME) {
+          // Custom A-Frame component for label interaction
+          AFRAME.registerComponent('label-click', {
+            init: function() {
+              this.el.addEventListener('click', () => {
+                const labelId = this.el.getAttribute('data-label-id');
+                const labelEvent = new CustomEvent('label-clicked', { 
+                  detail: { labelId: labelId } 
+                });
+                document.dispatchEvent(labelEvent);
+              });
+            }
+          });
+          
+          // Custom component for object dragging in edit mode
+          AFRAME.registerComponent('draggable', {
+            init: function() {
+              this.el.addEventListener('mousedown', this.onMouseDown.bind(this));
+              this.el.sceneEl.addEventListener('mousemove', this.onMouseMove.bind(this));
+              this.el.sceneEl.addEventListener('mouseup', this.onMouseUp.bind(this));
+              this.isDragging = false;
+              this.previousPosition = new THREE.Vector3();
+            },
+            
+            onMouseDown: function(evt) {
+              if (!this.el.getAttribute('data-editable')) return;
+              this.isDragging = true;
+              this.previousPosition.copy(this.el.object3D.position);
+              this.el.emit('dragstart');
+            },
+            
+            onMouseMove: function(evt) {
+              if (!this.isDragging) return;
+              
+              // Calculate movement based on camera position
+              const camera = this.el.sceneEl.camera;
+              const marker = document.querySelector('a-marker');
+              if (!marker || !marker.object3D.visible) return;
+              
+              // Use raycasting to determine position on the marker plane
+              const mouse = new THREE.Vector2(
+                (evt.clientX / window.innerWidth) * 2 - 1,
+                -(evt.clientY / window.innerHeight) * 2 + 1
+              );
+              
+              const raycaster = new THREE.Raycaster();
+              raycaster.setFromCamera(mouse, camera);
+              
+              const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1));
+              const intersection = new THREE.Vector3();
+              raycaster.ray.intersectPlane(plane, intersection);
+              
+              // Update position
+              this.el.object3D.position.copy(intersection);
+              this.el.emit('drag');
+            },
+            
+            onMouseUp: function(evt) {
+              if (!this.isDragging) return;
+              this.isDragging = false;
+              
+              // Emit event with new position data
+              const labelId = this.el.getAttribute('data-label-id');
+              const position = this.el.object3D.position;
+              const positionChangeEvent = new CustomEvent('position-changed', {
+                detail: {
+                  labelId: labelId,
+                  position: { x: position.x, y: position.y, z: position.z }
+                }
+              });
+              document.dispatchEvent(positionChangeEvent);
+              
+              this.el.emit('dragend');
+            }
+          });
+          
+          // Line component for connecting labels to targets
+          if (!AFRAME.components.line) {
+            AFRAME.registerComponent('line', {
+              schema: {
+                start: { type: 'vec3', default: { x: 0, y: 0, z: 0 } },
+                end: { type: 'vec3', default: { x: 0, y: 0, z: 0 } },
+                color: { type: 'color', default: '#fff' },
+                opacity: { type: 'number', default: 1 }
+              },
+              
+              init: function() {
+                this.geometry = new THREE.BufferGeometry();
+                this.material = new THREE.LineBasicMaterial({
+                  color: this.data.color,
+                  opacity: this.data.opacity,
+                  transparent: this.data.opacity < 1
+                });
+                this.line = new THREE.Line(this.geometry, this.material);
+                this.el.setObject3D('line', this.line);
+              },
+              
+              update: function() {
+                const positions = new Float32Array([
+                  this.data.start.x, this.data.start.y, this.data.start.z,
+                  this.data.end.x, this.data.end.y, this.data.end.z
+                ]);
+                this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                this.material.color.set(this.data.color);
+                this.material.opacity = this.data.opacity;
+              },
+              
+              remove: function() {
+                this.el.removeObject3D('line');
+              }
+            });
+          }
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
+
